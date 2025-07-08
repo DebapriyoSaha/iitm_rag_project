@@ -6,11 +6,14 @@ import os
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 
+
 class GradeDocuments(BaseModel):
     """Binary score for relevance check on retrieved documents."""
+
     binary_score: str = Field(
         description="Documents are relevant to the question, 'yes' or 'no'"
     )
+
 
 def get_retrieval_grader(model_name: str) -> RunnableSequence:
     llm = ChatGroq(groq_api_key=GROQ_KEY, model_name=model_name)
@@ -24,7 +27,10 @@ def get_retrieval_grader(model_name: str) -> RunnableSequence:
     grade_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system),
-            ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
+            (
+                "human",
+                "Retrieved document: \n\n {document} \n\n User question: {question}",
+            ),
         ]
     )
 

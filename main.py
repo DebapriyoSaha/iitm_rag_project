@@ -1,7 +1,13 @@
 import time
 from dotenv import load_dotenv
+
 load_dotenv()
 
+__import__("pysqlite3")
+import sys
+
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+import sqlite3
 import streamlit as st
 from graph.graph import app  # Your RAG pipeline
 
@@ -10,10 +16,11 @@ try:
     st.set_page_config(
         page_title="IIT Madras Q&A",
         layout="centered",  # Better for mobile responsiveness
-        initial_sidebar_state="auto"
+        initial_sidebar_state="auto",
     )
 
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         /* Chat responsiveness */
         .chat-message {
@@ -46,8 +53,9 @@ try:
             }
         }
     </style>
-    """, unsafe_allow_html=True)
-
+    """,
+        unsafe_allow_html=True,
+    )
 
     # --- Title ---
     st.title("📚 Ask Me Anything about IITM BS Program")
@@ -102,7 +110,9 @@ try:
                 if msg["content"].get("sources_html"):
                     st.markdown(msg["content"]["sources_html"], unsafe_allow_html=True)
                 if msg["content"].get("response_time"):
-                    st.caption(f"🕒 Responded in {msg['content']['response_time']:.2f} seconds")
+                    st.caption(
+                        f"🕒 Responded in {msg['content']['response_time']:.2f} seconds"
+                    )
             else:
                 st.markdown(msg["content"])
 
@@ -118,10 +128,12 @@ try:
         with st.chat_message("assistant"):
             with st.spinner("Searching for the answer..."):
                 start = time.time()
-                result = app.invoke({
-                    "question": last_user_msg["content"],
-                    "selected_model": selected_model
-                })
+                result = app.invoke(
+                    {
+                        "question": last_user_msg["content"],
+                        "selected_model": selected_model,
+                    }
+                )
                 end = time.time()
 
             answer = result.get("generation", "⚠️ No answer returned.")
@@ -133,7 +145,9 @@ try:
                 title = doc.metadata.get("title", doc.metadata.get("source", "Unknown"))
                 url = doc.metadata.get("url")
                 if url and url.startswith("http") and url not in seen_urls:
-                    source_lines.append(f'<li><a href="{url}" target="_blank">{title}</a></li>')
+                    source_lines.append(
+                        f'<li><a href="{url}" target="_blank">{title}</a></li>'
+                    )
                     seen_urls.add(url)
                 elif not url:
                     source_lines.append(f"<li>{title}</li>")
@@ -155,15 +169,17 @@ try:
             st.caption(f"🕒 Responded in {end - start:.2f} seconds")
 
             # Save response
-            st.session_state.chat_history.append({
-                "role": "assistant",
-                "content": {
-                    "text": answer,
-                    "sources_html": sources_html,
-                    "response_time": end - start,
-                },
-            })
+            st.session_state.chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": {
+                        "text": answer,
+                        "sources_html": sources_html,
+                        "response_time": end - start,
+                    },
+                }
+            )
 
             st.session_state.process_latest = False
 except Exception as e:
-    st.error(f"❌ An error occurred: {str(e)}")        
+    st.error(f"❌ An error occurred: {str(e)}")

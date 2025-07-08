@@ -35,17 +35,13 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
     hallucination_grader = get_hallucination_grader(model_name)
     answer_grader = get_answer_grader(model_name)
 
-    score = hallucination_grader.invoke({
-        "documents": documents,
-        "generation": generation
-    })
+    score = hallucination_grader.invoke(
+        {"documents": documents, "generation": generation}
+    )
 
     if score.binary_score:
         print("---DECISION: GENERATION IS GROUNDED IN DOCUMENTS---")
-        score = answer_grader.invoke({
-            "question": question,
-            "generation": generation
-        })
+        score = answer_grader.invoke({"question": question, "generation": generation})
         if score.binary_score:
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
             return "useful"
@@ -63,16 +59,16 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
 
 def route_question(state: GraphState) -> str:
     print("---ROUTE QUESTION---")
-    
+
     question = state["question"]
     model_name = state.get("selected_model", "llama-3.1-8b-instant")  # Default fallback
-    
+
     # Dynamically create the router with the correct model
     question_router = get_question_router(model_name)
-    
+
     # Invoke the routing LLM
     source: RouteQuery = question_router.invoke({"question": question})
-    
+
     if source.datasource == WEBSEARCH:
         print("---ROUTE QUESTION TO WEB SEARCH---")
         return WEBSEARCH
