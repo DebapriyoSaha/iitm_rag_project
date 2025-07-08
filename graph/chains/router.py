@@ -20,6 +20,7 @@ class RouteQuery(BaseModel):
 # Define system prompt
 system = """You are an expert at routing a user question to a vectorstore or web search.
 The vectorstore contains documents related to IIT Madras BS Degree Course in Data Science & Application.
+It contains information about the course structure, fees structure, grading document, student handbook, eligibility criteria, scholarships, and other related topics.
 Use the vectorstore for questions on these topics. For all else, use web-search."""
 route_prompt = ChatPromptTemplate.from_messages(
     [("system", system), ("human", "{question}")]
