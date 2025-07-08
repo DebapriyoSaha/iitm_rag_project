@@ -28,9 +28,13 @@ try:
             word-wrap: break-word;
         }
 
-            #GithubIcon {
-            visibility: hidden;
-            }
+        #GithubIcon {
+        visibility: hidden;
+        }
+
+        .st-emotion-cache-30do4w e3i9eg81, .st-emotion-cache-2qqdmp e1obcldf17, .stToolbarActionButton{
+        display: none;
+        }
 
         /* Input padding for mobile */
         .stChatInputContainer {
@@ -53,7 +57,7 @@ try:
         /* Mobile tweaks */
         @media screen and (max-width: 768px) {
             .stButton > button {
-                font-size: 0.9em;
+                font-size: 0.8em;
             }
         }
     </style>
