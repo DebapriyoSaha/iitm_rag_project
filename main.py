@@ -28,6 +28,10 @@ try:
             word-wrap: break-word;
         }
 
+            #GithubIcon {
+            visibility: hidden;
+            }
+
         /* Input padding for mobile */
         .stChatInputContainer {
             position: sticky;
@@ -92,8 +96,21 @@ try:
                 st.session_state.chat_history.append({"role": "user", "content": q})
                 st.session_state.process_latest = True
 
+        # --- Footer ---
+        st.markdown(
+            """
+            <hr style="margin-top: 3em; margin-bottom: 1em;">
+            <div style='text-align: center; font-size: 0.85em;'>
+                Developed by <a href="https://www.linkedin.com/in/debapriyo-saha" target="_blank">Debapriyo Saha</a>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        # --- Main Chat Area ---
+
     # --- Chat Input ---
     user_input = st.chat_input("Type your question here...")
+
     if user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         st.session_state.process_latest = True
