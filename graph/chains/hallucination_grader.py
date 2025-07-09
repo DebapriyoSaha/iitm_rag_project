@@ -20,12 +20,10 @@ def get_hallucination_grader(model_name: str) -> RunnableSequence:
     structured_llm_grader = llm.with_structured_output(GradeHallucinations)
 
     system_prompt = """
-You are a strict grader assessing whether an LLM-generated answer is grounded in a given set of facts.
-Your response must be a structured function call to `GradeHallucinations` with a single boolean field: `binary_score`.
-
-- Return `true` if the generation is factually supported by the provided facts.
-- Return `false` if it contains hallucinations, makes unsupported claims, or diverges from the facts.
-
+You are a strict grader assessing whether an LLM-generated answer is grounded in a given set of facts.\n
+Your response must be a structured function call to `GradeHallucinations` with a single boolean field: `binary_score`.\n
+- Return `true` if the generation is factually supported by the provided facts.\n
+- Return `false` if it contains hallucinations, makes unsupported claims, or diverges from the facts.\n
 Never return text or explain your reasoning. Only call the function.
 """
 

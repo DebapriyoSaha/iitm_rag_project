@@ -92,6 +92,18 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 #         "BA": "Business Analytics",
 #         "TDS": "Tools in Data Science",
 #         "MAD" : "Mordern Application Development",
+#         "AppDev": "Application Development",
+#         "ST": "Software Testing",
+#         "DSA": "Data Structures and Algorithms",
+#         "AI": "Artificial Intelligence",
+#         "DS": "Data Science",
+#         "CV": "Computer Vision",
+#         "NLP": "Natural Language Processing",
+#         "LLM": "Large Language Models",
+#         "MLOPS": "Machine Learning Operations",
+#         "DBMS": "Database Management Systems",
+#         "ADS": "Algorithms for Data Science",
+#         "Gen AI": "Generative AI",
 #     }.items()
 # ]
 

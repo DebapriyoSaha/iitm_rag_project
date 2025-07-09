@@ -46,11 +46,15 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
             return "useful"
         else:
-            print("---DECISION: GENERATION DOES NOT ADDRESS QUESTION---")
-            return "not useful"
+            if retry_count >= 2:
+                print("---DECISION: GENERATION NOT USEFUL AND MAX RETRIES REACHED---")
+                return "fallback"
+            else:
+                print("---DECISION: GENERATION NOT USEFUL. WILL RETRY WITH WEB SEARCH---")
+                return "not useful"
     else:
         if retry_count >= 2:
-            print("---DECISION: MAX RETRIES REACHED---")
+            print("---DECISION: MAX RETRIES REACHED FOR HALLUCINATION---")
             return "fallback"
         else:
             print("---DECISION: GENERATION IS NOT GROUNDED. WILL RETRY---")
@@ -95,14 +99,14 @@ workflow.add_node(GRADE_DOCUMENTS, grade_documents)
 workflow.add_node(GENERATE, generate)
 workflow.add_node(WEBSEARCH, web_search)
 
-workflow.set_conditional_entry_point(
-    route_question,
-    {
-        WEBSEARCH: WEBSEARCH,
-        RETRIEVE: RETRIEVE,
-    },
-)
-# workflow.set_entry_point(RETRIEVE)
+# workflow.set_conditional_entry_point(
+#     route_question,
+#     {
+#         WEBSEARCH: WEBSEARCH,
+#         RETRIEVE: RETRIEVE,
+#     },
+# )
+workflow.set_entry_point(RETRIEVE)
 workflow.add_edge(RETRIEVE, GRADE_DOCUMENTS)
 workflow.add_conditional_edges(
     GRADE_DOCUMENTS,
