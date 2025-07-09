@@ -3,13 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# __import__("pysqlite3")
-# import sys
-
-# sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
-# import sqlite3
 import streamlit as st
 from graph.graph import app  # Your RAG pipeline
+
+# --- Greeting Handler ---
+def is_greeting(message):
+    greetings = ["hi", "hello", "hey", "good morning", "good evening", "good afternoon"]
+    return message.lower().strip() in greetings
 
 try:
     # --- Page config ---
@@ -141,62 +141,79 @@ try:
         with st.chat_message("user"):
             st.markdown(last_user_msg["content"])
 
-        # Show assistant response
-        with st.chat_message("assistant"):
-            with st.spinner("Searching for the answer..."):
-                start = time.time()
-                result = app.invoke(
+        # Check for greeting
+        if is_greeting(last_user_msg["content"]):
+            with st.chat_message("assistant"):
+                greeting_response = "👋 Hello! I'm here to help you with any questions about the IIT Madras BS Program. Ask me anything!"
+                st.markdown(greeting_response)
+                st.session_state.chat_history.append(
                     {
-                        "question": last_user_msg["content"],
-                        "selected_model": selected_model,
+                        "role": "assistant",
+                        "content": {
+                            "text": greeting_response,
+                            "sources_html": "",
+                            "response_time": 0.0,
+                        },
                     }
                 )
-                end = time.time()
-
-            answer = result.get("generation", "⚠️ No answer returned.")
-            source_docs = result.get("documents", [])
-            seen_urls = set()
-            source_lines = []
-
-            for doc in source_docs:
-                title = doc.metadata.get("title", doc.metadata.get("source", "Unknown"))
-                url = doc.metadata.get("url")
-                if url and url.startswith("http") and url not in seen_urls:
-                    source_lines.append(
-                        f'<li><a href="{url}" target="_blank">{title}</a></li>'
-                    )
-                    seen_urls.add(url)
-                elif not url:
-                    source_lines.append(f"<li>{title}</li>")
-
-            sources_html = ""
-            if source_lines:
-                sources_html = f"""
-                <div style="font-size: 0.85em; margin-top: 1em;">
-                    <strong>Sources:</strong>
-                    <ul style="margin-top: 0.3em; margin-bottom: 0;">
-                        {''.join(source_lines)}
-                    </ul>
-                </div>
-                """
-
-            st.write(answer)
-            if sources_html:
-                st.markdown(sources_html, unsafe_allow_html=True)
-            st.caption(f"🕒 Responded in {end - start:.2f} seconds")
-
-            # Save response
-            st.session_state.chat_history.append(
-                {
-                    "role": "assistant",
-                    "content": {
-                        "text": answer,
-                        "sources_html": sources_html,
-                        "response_time": end - start,
-                    },
-                }
-            )
-
             st.session_state.process_latest = False
+        else:    
+            # Show assistant response
+            with st.chat_message("assistant"):
+                with st.spinner("Searching for the answer..."):
+                    start = time.time()
+                    result = app.invoke(
+                        {
+                            "question": last_user_msg["content"],
+                            "selected_model": selected_model,
+                        }
+                    )
+                    end = time.time()
+
+                answer = result.get("generation", "⚠️ No answer returned.")
+                source_docs = result.get("documents", [])
+                seen_urls = set()
+                source_lines = []
+
+                for doc in source_docs:
+                    title = doc.metadata.get("title", doc.metadata.get("source", "Unknown"))
+                    url = doc.metadata.get("url")
+                    if url and url.startswith("http") and url not in seen_urls:
+                        source_lines.append(
+                            f'<li><a href="{url}" target="_blank">{title}</a></li>'
+                        )
+                        seen_urls.add(url)
+                    elif not url:
+                        source_lines.append(f"<li>{title}</li>")
+
+                sources_html = ""
+                if source_lines:
+                    sources_html = f"""
+                    <div style="font-size: 0.85em; margin-top: 1em;">
+                        <strong>Sources:</strong>
+                        <ul style="margin-top: 0.3em; margin-bottom: 0;">
+                            {''.join(source_lines)}
+                        </ul>
+                    </div>
+                    """
+
+                st.write(answer)
+                if sources_html:
+                    st.markdown(sources_html, unsafe_allow_html=True)
+                st.caption(f"🕒 Responded in {end - start:.2f} seconds")
+
+                # Save response
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": {
+                            "text": answer,
+                            "sources_html": sources_html,
+                            "response_time": end - start,
+                        },
+                    }
+                )
+
+                st.session_state.process_latest = False
 except Exception as e:
     st.error(f"❌ An error occurred: {str(e)}")
