@@ -21,11 +21,11 @@ def get_answer_grader(model_name: str) -> RunnableSequence:
         [
             (
                 "system",
-                """You are a grader assessing whether an answer addresses / resolves a question and is relevant from the retrieved query related to the IIT Madras BS Degree Course.
+                """You are a grader assessing whether an answer addresses / resolves a question.
     Your response must be a structured function call to `GradeAnswer` with a single boolean field: `binary_score`.
 
-    - Return `true` if the answer resolves the query and related to the retrieved document which contains details about IIT Madras BS Degree Course.
-    - Return `false` if the answer does not resolve the query and has no relation to the retrieved document.
+    - Return `true` if the answer resolves the query.
+    - Return `false` if the answer does not resolve the query.
 
         Never return text or explain your reasoning. Only call the function.""",
             ),

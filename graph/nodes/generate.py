@@ -7,7 +7,7 @@ def generate(state: GraphState) -> Dict[str, Any]:
     print("---GENERATE---")
     question = state["question"]
     documents = state["documents"]
-    model_name = state.get("selected_model", "gpt-4")  # default fallback
+    model_name = state.get("selected_model", "llama-3.1-8b-instant")  # default fallback
 
     generation_chain = get_generation_chain(model_name)
     generation = generation_chain.invoke({"context": documents, "question": question})
