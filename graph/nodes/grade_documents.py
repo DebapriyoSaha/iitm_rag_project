@@ -20,7 +20,7 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
     question = state["question"]
     documents = state["documents"]
-    model_name = state.get("selected_model", "gpt-4")  # default fallback
+    model_name = state.get("selected_model", "llama-3.1-8b-instant")  # default fallback
 
     filtered_docs = []
     web_search = False
