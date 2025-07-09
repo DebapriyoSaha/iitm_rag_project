@@ -14,7 +14,7 @@ def is_greeting(message):
 try:
     # --- Page config ---
     st.set_page_config(
-        page_title="IIT Madras Q&A",
+        page_title="IITM BS Degree Chatbot",
         layout="centered",  # Better for mobile responsiveness
         initial_sidebar_state="auto",
     )
@@ -62,7 +62,8 @@ try:
     )
 
     # --- Title ---
-    st.title("📚 Ask Me Anything about IITM BS Program")
+    st.title("📚 :blue[IITM BS Degree Chatbot]")
+    st.markdown("""Ask me about Academics, Admissions, Scholarships, Course Structure, Fees Structure and more!""")
 
     # --- Initialize Chat State ---
     if "chat_history" not in st.session_state:
