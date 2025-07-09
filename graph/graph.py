@@ -46,14 +46,14 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
             return "useful"
         else:
-            if retry_count >= 2:
+            if retry_count >= 1:
                 print("---DECISION: GENERATION NOT USEFUL AND MAX RETRIES REACHED---")
                 return "fallback"
             else:
                 print("---DECISION: GENERATION NOT USEFUL. WILL RETRY WITH WEB SEARCH---")
                 return "not useful"
     else:
-        if retry_count >= 2:
+        if retry_count >= 1:
             print("---DECISION: MAX RETRIES REACHED FOR HALLUCINATION---")
             return "fallback"
         else:
@@ -127,6 +127,7 @@ workflow.add_conditional_edges(
         "fallback": END,  # end gracefully
     },
 )
+workflow.add_edge("retry_handler", WEBSEARCH)
 workflow.add_edge(WEBSEARCH, GENERATE)
 workflow.add_edge(GENERATE, END)
 

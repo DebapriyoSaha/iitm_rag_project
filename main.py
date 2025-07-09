@@ -162,12 +162,27 @@ try:
             with st.chat_message("assistant"):
                 with st.spinner("Searching for the answer..."):
                     start = time.time()
-                    result = app.invoke(
-                        {
-                            "question": last_user_msg["content"],
-                            "selected_model": selected_model,
-                        }
-                    )
+                    result = None
+                    MAX_RETRIES = 2
+                    attempt = 0
+                    while attempt <= MAX_RETRIES:
+                        try:
+                            result = app.invoke(
+                                {
+                                    "question": last_user_msg["content"],
+                                    "selected_model": selected_model,
+                                },
+                                config={"max_iterations": 2}
+                            )
+                            break  # Success
+                        except Exception as e:
+                            attempt += 1
+                            st.warning(f"⚠️ Attempt {attempt} failed. Retrying..." if attempt <= MAX_RETRIES else "❌ Failed after multiple attempts.")
+                            time.sleep(1)  # Delay before retry
+                            if attempt > MAX_RETRIES:
+                                st.error(f"❌ Error: {str(e)}")
+                                result = {"generation": "⚠️ Could not generate a valid answer.", "documents": []}
+                                break
                     end = time.time()
 
                 answer = result.get("generation", "⚠️ No answer returned.")
