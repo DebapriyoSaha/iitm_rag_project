@@ -1,3 +1,5 @@
+from urllib.parse import urljoin, urlparse
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from langchain.text_splitter import (
     HTMLHeaderTextSplitter,
@@ -7,20 +9,61 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema import Document
+from langchain.retrievers import EnsembleRetriever
 import re
+
+import requests
 
 load_dotenv()
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
+def clean_text(text: str) -> str:
+    # Remove extra whitespace and blank lines
+    text = text.strip()
+    text = re.sub(r"\n\s*\n", "\n", text)  # Remove empty lines
+    text = re.sub(r"[ \t]+", " ", text)    # Collapse multiple spaces/tabs
+    return text
+
+def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
+    visited = set()
+    to_visit = [(base_url, 0)]
+    domain = urlparse(base_url).netloc
+
+    while to_visit:
+        current_url, depth = to_visit.pop()
+        if current_url in visited or depth > max_depth:
+            continue
+        visited.add(current_url)
+
+        try:
+            response = requests.get(current_url, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+        except Exception as e:
+            print(f"Failed to access {current_url}: {e}")
+            continue
+
+        for a_tag in soup.find_all("a", href=True):
+            href = a_tag["href"]
+            full_url = urljoin(current_url, href)
+            parsed = urlparse(full_url)
+
+            # Only follow internal links
+            if parsed.netloc == domain:
+                clean_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                if clean_url not in visited:
+                    to_visit.append((clean_url, depth + 1))
+
+    return list(sorted(visited))
+
 # urls = [
 #     "https://docs.google.com/document/d/e/2PACX-1vRxGnnDCVAO3KX2CGtMIcJQuDrAasVk2JHbDxkjsGrTP5ShhZK8N6ZSPX89lexKx86QPAUswSzGLsOA/pub",
 #     "https://docs.google.com/document/d/e/2PACX-1vRKOWaLjxsts3qAM4h00EDvlB-GYRSPqqVXTfq3nGWFQBx91roxcU1qGv2ksS7jT4EQPNo8Rmr2zaE9/pub?urp=gmail_link#h.cbcq4ial1xkk",
-#     "https://study.iitm.ac.in/ds/",
-#     "https://study.iitm.ac.in/ds/academics.html",
-#     "https://study.iitm.ac.in/ds/admissions.html",
-#     "https://study.iitm.ac.in/ds/aboutIITM.html",
-#     "https://study.iitm.ac.in/ds/academic_calendar.html",
+#     "https://docs.google.com/document/d/e/2PACX-1vSHXM0T-Rl2h0M9_33mEGChYIHo29UUJ0coR5YEt1_KfFaybnHlBUawBODHUwlBKqjMTc2Ie18gRRnm/pub"
+
 # ]
+
+# urls = urls + extract_all_internal_links("https://study.iitm.ac.in/ds/", max_depth=11)  # increase
 
 # # 2. Load documents
 # docs = [WebBaseLoader(url).load() for url in urls]
@@ -43,8 +86,13 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 # # Apply preprocessing
 # preprocessed_docs = []
 # for doc in docs_list:
-#     acronyms = extract_acronyms(doc.page_content)
-#     expanded = expand_acronyms(doc.page_content, acronyms)
+#     # Clean text
+#     cleaned = clean_text(doc.page_content)
+
+#     # Expand acronyms
+#     acronyms = extract_acronyms(cleaned)
+#     expanded = expand_acronyms(cleaned, acronyms)
+
 #     doc.page_content = expanded
 #     preprocessed_docs.append(doc)
 
@@ -68,7 +116,7 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 # # 5. Second pass: Recursive chunking by size
 # text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-#     chunk_size=300,
+#     chunk_size=500,
 #     chunk_overlap=50,
 # )
 
@@ -114,13 +162,36 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 # # 9. Create vector store
 # vectorstore = Chroma.from_documents(
 #     documents=all_chunks,
-#     collection_name="rag-chroma",
+#     collection_name="rag-chroma-extra",
 #     embedding=embeddings,
-#     persist_directory="./.chroma",
+#     persist_directory="./.chroma-extra",
 # )
 
-retriever = Chroma(
+# retriever = Chroma(
+#     collection_name="rag-chroma",
+#     persist_directory="./.chroma",
+#     embedding_function=embeddings,
+# ).as_retriever()
+
+retriever1 = Chroma(
     collection_name="rag-chroma",
     persist_directory="./.chroma",
-    embedding_function=embeddings,
-).as_retriever()
+    embedding_function=embeddings
+).as_retriever(search_kwargs={"k": 5})
+
+retriever2 = Chroma(
+    collection_name="rag-chroma-extra",
+    persist_directory="./.chroma-extra",
+    embedding_function=embeddings
+).as_retriever(search_kwargs={"k": 5})
+
+# Combine both
+retriever = EnsembleRetriever(
+    retrievers=[retriever1, retriever2],
+    weights=[0.4, 0.6]
+)
+
+# if __name__ == "__main__":
+#     print(f"✓ Ingested {len(all_chunks)} chunks into Chroma.")
+#     print(f"✓ Created retriever with {len(retriever1.invoke('test'))} docs from primary and {len(retriever2.invoke('test'))} docs from secondary.")
+#     print("✓ Ready for queries!")

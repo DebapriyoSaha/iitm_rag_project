@@ -1,3 +1,4 @@
+import random
 import time
 from dotenv import load_dotenv
 
@@ -80,6 +81,10 @@ try:
             "mistral-saba-24b",
             "meta-llama/llama-4-maverick-17b-128e-instruct",
         ]
+        # Shuffle the list
+        random.shuffle(model_options)
+
+        # Display selectbox with randomized order
         selected_model = st.selectbox("Select a model", model_options)
         st.success(f"✅ Model set to **{selected_model}**")
 
@@ -193,7 +198,8 @@ try:
 
                 for doc in source_docs:
                     title = doc.metadata.get("title", doc.metadata.get("source", "Unknown"))
-                    url = doc.metadata.get("url")
+                    # url = doc.metadata.get("url")
+                    url = doc.metadata.get("url") or doc.metadata.get("source")
                     if url and url.startswith("http") and url not in seen_urls:
                         source_lines.append(
                             f'<li><a href="{url}" target="_blank">{title}</a></li>'
@@ -206,7 +212,7 @@ try:
                 if source_lines:
                     sources_html = f"""
                     <div style="font-size: 0.85em; margin-top: 1em;">
-                        <strong>Sources:</strong>
+                        <strong>References:</strong>
                         <ul style="margin-top: 0.3em; margin-bottom: 0;">
                             {''.join(source_lines)}
                         </ul>
