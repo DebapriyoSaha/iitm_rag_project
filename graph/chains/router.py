@@ -1,9 +1,10 @@
-from typing import Literal
 import os
+from typing import Literal
+
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
-from langchain_core.runnables import Runnable
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 

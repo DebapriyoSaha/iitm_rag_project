@@ -1,10 +1,12 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain_core.runnables import RunnableSequence
-from pydantic import BaseModel, Field
 import os
 
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableSequence
+from langchain_groq import ChatGroq
+from pydantic import BaseModel, Field
+
 GROQ_KEY = os.getenv("GROQ_API_KEY")
+
 
 class GradeDocuments(BaseModel):
     """Binary score for relevance check on retrieved documents."""

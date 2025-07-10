@@ -1,9 +1,10 @@
 from typing import Any, Dict
 
+from ddgs import DDGS
 from dotenv import load_dotenv
 from langchain.schema import Document
 from langchain_tavily import TavilySearch
-from ddgs import DDGS
+
 from graph.state import GraphState
 
 load_dotenv()
@@ -30,6 +31,7 @@ load_dotenv()
 #     combined_documents = existing_documents + new_documents
 #     return {"documents": combined_documents, "question": question}
 
+
 def web_search(state: GraphState) -> Dict[str, Any]:
     print("---DUCKDUCKGO SEARCH---")
     question = state["question"]
@@ -45,7 +47,7 @@ def web_search(state: GraphState) -> Dict[str, Any]:
 
             doc = Document(
                 page_content=content,
-                metadata={"source": title, "url": url, "title": title}
+                metadata={"source": title, "url": url, "title": title},
             )
             new_documents.append(doc)
 

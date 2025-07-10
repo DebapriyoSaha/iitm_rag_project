@@ -1,21 +1,32 @@
 import asyncio
 from typing import Any, Dict, List
-from graph.chains.retrieval_grader import get_retrieval_grader
-from graph.state import GraphState
+
 from langchain_core.documents import Document
 
-async def grade_single_doc(grader, question: str, document: Document) -> tuple[bool, Document]:
+from graph.chains.retrieval_grader import get_retrieval_grader
+from graph.state import GraphState
+
+
+async def grade_single_doc(
+    grader, question: str, document: Document
+) -> tuple[bool, Document]:
     try:
-        score = await grader.ainvoke({"question": question, "document": document.page_content})
+        score = await grader.ainvoke(
+            {"question": question, "document": document.page_content}
+        )
         return score.binary_score, document
     except Exception as e:
         print(f"Grading failed for document: {e}")
         return False, document
 
-async def async_grade_documents(question: str, documents: List[Document], model_name: str):
+
+async def async_grade_documents(
+    question: str, documents: List[Document], model_name: str
+):
     grader = get_retrieval_grader(model_name)
     tasks = [grade_single_doc(grader, question, doc) for doc in documents]
     return await asyncio.gather(*tasks)
+
 
 def grade_documents(state: GraphState) -> Dict[str, Any]:
     """
@@ -35,11 +46,7 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     web_search = len(filtered_docs) == 0
 
     print(f"✓ {len(filtered_docs)} of {len(documents)} documents marked relevant")
-    return {
-        "documents": filtered_docs,
-        "question": question,
-        "web_search": web_search
-    }
+    return {"documents": filtered_docs, "question": question, "web_search": web_search}
 
 
 # from typing import Any, Dict

@@ -1,7 +1,8 @@
+import os
+
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
-import os
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 

@@ -1,7 +1,6 @@
 import random
 import time
 from dotenv import load_dotenv
-
 load_dotenv()
 
 import streamlit as st
@@ -11,6 +10,19 @@ from graph.graph import app  # Your RAG pipeline
 def is_greeting(message):
     greetings = ["hi", "hello", "hey", "good morning", "good evening", "good afternoon"]
     return message.lower().strip() in greetings
+
+def is_identity_question(message: str) -> bool:
+    identity_keywords = [
+        "who are you",
+        "what is your name",
+        "tell me about yourself",
+        "what can you do",
+        "what are you",
+        "are you a bot",
+        "are you human",
+    ]
+    msg = message.lower().strip()
+    return any(k in msg for k in identity_keywords)
 
 try:
     # --- Page config ---
@@ -64,7 +76,9 @@ try:
 
     # --- Title ---
     st.title("📚 :blue[IITM BS Degree Chatbot]")
-    st.markdown("""Ask me about Academics, Admissions, Scholarships, Course Structure, Fees Structure and more!""")
+    st.markdown(
+        """Ask me about Academics, Admissions, Scholarships, Course Structure, Fees Structure and more!"""
+    )
 
     # --- Initialize Chat State ---
     if "chat_history" not in st.session_state:
@@ -89,7 +103,9 @@ try:
             random.shuffle(st.session_state.shuffled_models)
 
         # Use the persistent shuffled list
-        selected_model = st.selectbox("Select a model", st.session_state.shuffled_models)
+        selected_model = st.selectbox(
+            "Select a model", st.session_state.shuffled_models
+        )
 
         st.success(f"✅ Model set to **{selected_model}**")
 
@@ -115,7 +131,7 @@ try:
                 Developed by <a href="https://www.linkedin.com/in/debapriyo-saha" target="_blank">Debapriyo Saha</a>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
         # --- Main Chat Area ---
 
@@ -168,7 +184,25 @@ try:
                     }
                 )
             st.session_state.process_latest = False
-        else:    
+        elif is_identity_question(last_user_msg["content"]):
+            with st.chat_message("assistant"):
+                identity_response = (
+                    "I’m an AI-powered assistant designed to help you know about the IIT Madras BS Degree Program. "
+                    "You can ask me about courses, eligibility, admissions, scholarships, and more!"
+                )
+                st.markdown(identity_response)
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": {
+                            "text": identity_response,
+                            "sources_html": "",
+                            "response_time": 0.0,
+                        },
+                    }
+                )
+            st.session_state.process_latest = False
+        else:
             # Show assistant response
             with st.chat_message("assistant"):
                 with st.spinner("Searching for the answer..."):
@@ -183,16 +217,23 @@ try:
                                     "question": last_user_msg["content"],
                                     "selected_model": selected_model,
                                 },
-                                config={"max_iterations": 2}
+                                config={"max_iterations": 2},
                             )
                             break  # Success
                         except Exception as e:
                             attempt += 1
-                            st.warning(f"⚠️ Attempt {attempt} failed. Retrying..." if attempt <= MAX_RETRIES else "❌ Failed after multiple attempts.")
+                            st.warning(
+                                f"⚠️ Attempt {attempt} failed. Retrying..."
+                                if attempt <= MAX_RETRIES
+                                else "❌ Failed after multiple attempts."
+                            )
                             time.sleep(1)  # Delay before retry
                             if attempt > MAX_RETRIES:
                                 st.error(f"❌ Error: {str(e)}")
-                                result = {"generation": "⚠️ Could not generate a valid answer.", "documents": []}
+                                result = {
+                                    "generation": "⚠️ Could not generate a valid answer.",
+                                    "documents": [],
+                                }
                                 break
                     end = time.time()
 
@@ -202,7 +243,9 @@ try:
                 source_lines = []
 
                 for doc in source_docs:
-                    title = doc.metadata.get("title", doc.metadata.get("source", "Unknown"))
+                    title = doc.metadata.get(
+                        "title", doc.metadata.get("source", "Unknown")
+                    )
                     # url = doc.metadata.get("url")
                     url = doc.metadata.get("url") or doc.metadata.get("source")
                     if url and url.startswith("http") and url not in seen_urls:

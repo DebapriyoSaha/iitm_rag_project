@@ -1,6 +1,8 @@
+from urllib.parse import urljoin, urlparse
+
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+
 
 def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
     visited = set()
@@ -33,6 +35,7 @@ def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
                     to_visit.append((clean_url, depth + 1))
 
     return list(sorted(visited))
+
 
 if __name__ == "__main__":
     base = "https://study.iitm.ac.in/ds/"

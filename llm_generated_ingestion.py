@@ -1,18 +1,18 @@
-from io import StringIO
-from urllib.parse import urljoin, urlparse
-import requests
-import pandas as pd
+import os
 import re
 import uuid
-import os
+from io import StringIO
 from typing import List, Tuple
-from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
-from langchain_core.documents import Document
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 
 # --- CONFIGURATION ---
 GROQ_KEY = os.getenv("GROQ_API_KEY")
@@ -43,6 +43,7 @@ ACRONYM_MAP = {
     "ADS": "Algorithms for Data Science",
     "Gen AI": "Generative AI",
 }
+
 
 # --- Extract All Internal Links ---
 def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
@@ -89,15 +90,15 @@ def extract_text_and_tables(url: str) -> Tuple[str, List[pd.DataFrame]]:
         print(f"Failed to retrieve {url}: {e}")
         return "", []
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    for tag in soup(['script', 'style', 'noscript']):
+    soup = BeautifulSoup(response.text, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
 
-    text = soup.get_text(separator='\n')
-    text = '\n'.join(line.strip() for line in text.splitlines() if line.strip())
+    text = soup.get_text(separator="\n")
+    text = "\n".join(line.strip() for line in text.splitlines() if line.strip())
 
     tables = []
-    for index, table in enumerate(soup.find_all('table')):
+    for index, table in enumerate(soup.find_all("table")):
         try:
             df = pd.read_html(StringIO(str(table)))[0]
             tables.append(df)
@@ -105,11 +106,13 @@ def extract_text_and_tables(url: str) -> Tuple[str, List[pd.DataFrame]]:
             print(f"Failed to parse table {index} on {url}: {e}")
     return text, tables
 
+
 # --- Expand Acronyms ---
 def expand_acronyms(text: str, acronym_map: dict) -> str:
     for acronym, full_form in acronym_map.items():
-        text = re.sub(rf'\b{acronym}\b', f"{acronym} ({full_form})", text)
+        text = re.sub(rf"\b{acronym}\b", f"{acronym} ({full_form})", text)
     return text
+
 
 # --- Summarize Tables ---
 def summarize_table(df: pd.DataFrame, url: str) -> str:
@@ -128,36 +131,36 @@ Make sure to include the meaning title of the table, and any important details."
         print(f"LLM failed on table: {e}")
         return ""
 
+
 # --- Convert Content to Documents ---
-def create_documents_from_text_and_tables(text: str, tables: List[pd.DataFrame], url: str) -> List[Document]:
+def create_documents_from_text_and_tables(
+    text: str, tables: List[pd.DataFrame], url: str
+) -> List[Document]:
     documents = []
 
     # Main text document
     expanded_text = expand_acronyms(text, ACRONYM_MAP)
     if expanded_text:
-        documents.append(Document(
-            page_content=expanded_text,
-            metadata={"source": url}
-        ))
+        documents.append(Document(page_content=expanded_text, metadata={"source": url}))
 
     # Each table summary as its own document
     for df in tables:
         summary = summarize_table(df, url)
         expanded_summary = expand_acronyms(summary, ACRONYM_MAP)
         if expanded_summary:
-            documents.append(Document(
-                page_content=expanded_summary,
-                metadata={"source": url}
-            ))
+            documents.append(
+                Document(page_content=expanded_summary, metadata={"source": url})
+            )
     return documents
+
 
 # --- Chunk Documents ---
 def chunk_documents(documents: List[Document]) -> List[Document]:
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=500,
-        chunk_overlap=100
+        chunk_size=500, chunk_overlap=100
     )
     return splitter.split_documents(documents)
+
 
 # --- Ingest to Chroma ---
 def ingest_to_chroma(documents: List[Document]):
@@ -169,9 +172,10 @@ def ingest_to_chroma(documents: List[Document]):
         documents=documents,
         collection_name="rag-chroma",
         embedding=embeddings,
-        persist_directory="./.chroma"
+        persist_directory="./.chroma",
     )
     print("✓ Ingested into Chroma.")
+
 
 # --- Ingest Acronyms ---
 def ingest_acronym_definitions(acronym_map: dict):
@@ -180,6 +184,7 @@ def ingest_acronym_definitions(acronym_map: dict):
     chunks = chunk_documents([doc])
     ingest_to_chroma(chunks)
     print("✓ Acronym glossary ingested")
+
 
 # --- Main Processing Pipeline ---
 def process_urls(url_list: List[str]):
@@ -200,17 +205,20 @@ def process_urls(url_list: List[str]):
         ingest_to_chroma(chunked_docs)
         print(f"✓ Finished processing: {url}")
 
+
 # --- Entry Point ---
 if __name__ == "__main__":
     urls = [
         "https://docs.google.com/document/d/e/2PACX-1vRxGnnDCVAO3KX2CGtMIcJQuDrAasVk2JHbDxkjsGrTP5ShhZK8N6ZSPX89lexKx86QPAUswSzGLsOA/pub",
         "https://docs.google.com/document/d/e/2PACX-1vRKOWaLjxsts3qAM4h00EDvlB-GYRSPqqVXTfq3nGWFQBx91roxcU1qGv2ksS7jT4EQPNo8Rmr2zaE9/pub?urp=gmail_link#h.cbcq4ial1xkk",
-        "https://docs.google.com/document/d/e/2PACX-1vSHXM0T-Rl2h0M9_33mEGChYIHo29UUJ0coR5YEt1_KfFaybnHlBUawBODHUwlBKqjMTc2Ie18gRRnm/pub"
+        "https://docs.google.com/document/d/e/2PACX-1vSHXM0T-Rl2h0M9_33mEGChYIHo29UUJ0coR5YEt1_KfFaybnHlBUawBODHUwlBKqjMTc2Ie18gRRnm/pub",
     ]
 
     # Ingest acronyms
     ingest_acronym_definitions(ACRONYM_MAP)
 
     # Crawl site and ingest
-    all_urls = urls + extract_all_internal_links("https://study.iitm.ac.in/ds/", max_depth=11)
+    all_urls = urls + extract_all_internal_links(
+        "https://study.iitm.ac.in/ds/", max_depth=11
+    )
     process_urls(all_urls)

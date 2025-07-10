@@ -1,3 +1,5 @@
+import re
+
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 
@@ -10,9 +12,30 @@ from graph.state import GraphState
 
 load_dotenv()
 
+
 def expand_acronyms(state: GraphState) -> GraphState:
     print("---EXPANDING ACRONYMS---")
-    
+
+    question = state["question"]
+    lowered_question = question.lower().strip()
+
+    # 1. Check if it's a "full form" question
+    full_form_patterns = [
+        r"\bfull form\b",
+        r"\bstands for\b",
+        r"\bmeaning of\b",
+        r"\bexpand\b",
+        r"\bshort for\b",
+        r"\babbreviation\b",
+        r"\bwhat does\b.*\bstand for\b",
+    ]
+
+    for pattern in full_form_patterns:
+        if re.search(pattern, lowered_question):
+            print("---SKIPPED: Detected full form/abbreviation question---")
+            return state  # Skip expansion
+
+    # 2. Acronym Expansion Dictionary
     acronym_map = {
         "MLT": "Machine Learning Techniques",
         "MLF": "Machine Learning Foundations",
@@ -21,7 +44,7 @@ def expand_acronyms(state: GraphState) -> GraphState:
         "PDSA": "Programming Data Structures and Algorithms using Python",
         "BA": "Business Analytics",
         "TDS": "Tools in Data Science",
-        "MAD" : "Mordern Application Development",
+        "MAD": "Modern Application Development",
         "AppDev": "Application Development",
         "ST": "Software Testing",
         "DSA": "Data Structures and Algorithms",
@@ -34,15 +57,17 @@ def expand_acronyms(state: GraphState) -> GraphState:
         "DBMS": "Database Management Systems",
         "ADS": "Algorithms for Data Science",
         "Gen AI": "Generative AI",
+        "SC": "System Commands"
     }
 
-    question = state["question"]
+    # 3. Expand Acronyms in Question
     words = question.split()
     expanded_words = []
 
     for word in words:
-        if word.upper() in acronym_map:
-            expanded = acronym_map[word.upper()]
+        upper_word = word.upper()
+        if upper_word in acronym_map:
+            expanded = acronym_map[upper_word]
             print(f"Expanded {word} to {expanded}")
             expanded_words.append(expanded)
         else:
@@ -92,7 +117,9 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
                 print("---DECISION: GENERATION NOT USEFUL AND MAX RETRIES REACHED---")
                 return "fallback"
             else:
-                print("---DECISION: GENERATION NOT USEFUL. WILL RETRY WITH WEB SEARCH---")
+                print(
+                    "---DECISION: GENERATION NOT USEFUL. WILL RETRY WITH WEB SEARCH---"
+                )
                 return "not useful"
     else:
         if retry_count >= 1:

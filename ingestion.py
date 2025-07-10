@@ -1,28 +1,28 @@
+import re
 from urllib.parse import urljoin, urlparse
+
+import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from langchain.text_splitter import (
-    HTMLHeaderTextSplitter,
-    RecursiveCharacterTextSplitter,
-)
+from langchain.retrievers import EnsembleRetriever
+from langchain.schema import Document
+from langchain.text_splitter import (HTMLHeaderTextSplitter,
+                                     RecursiveCharacterTextSplitter)
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.schema import Document
-from langchain.retrievers import EnsembleRetriever
-import re
-
-import requests
 
 load_dotenv()
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
 
 def clean_text(text: str) -> str:
     # Remove extra whitespace and blank lines
     text = text.strip()
     text = re.sub(r"\n\s*\n", "\n", text)  # Remove empty lines
-    text = re.sub(r"[ \t]+", " ", text)    # Collapse multiple spaces/tabs
+    text = re.sub(r"[ \t]+", " ", text)  # Collapse multiple spaces/tabs
     return text
+
 
 def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
     visited = set()
@@ -55,6 +55,7 @@ def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
                     to_visit.append((clean_url, depth + 1))
 
     return list(sorted(visited))
+
 
 # urls = [
 #     "https://docs.google.com/document/d/e/2PACX-1vRxGnnDCVAO3KX2CGtMIcJQuDrAasVk2JHbDxkjsGrTP5ShhZK8N6ZSPX89lexKx86QPAUswSzGLsOA/pub",
@@ -152,6 +153,7 @@ def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
 #         "DBMS": "Database Management Systems",
 #         "ADS": "Algorithms for Data Science",
 #         "Gen AI": "Generative AI",
+#         "SC": "System Commands"
 #     }.items()
 # ]
 
@@ -176,20 +178,17 @@ def extract_all_internal_links(base_url: str, max_depth=2) -> list[str]:
 retriever1 = Chroma(
     collection_name="rag-chroma",
     persist_directory="./.chroma",
-    embedding_function=embeddings
+    embedding_function=embeddings,
 ).as_retriever(search_kwargs={"k": 2})
 
 retriever2 = Chroma(
     collection_name="rag-chroma-extra",
     persist_directory="./.chroma-extra",
-    embedding_function=embeddings
-).as_retriever(search_kwargs={"k": 2})
+    embedding_function=embeddings,
+).as_retriever(search_kwargs={"k": 3})
 
 # Combine both
-retriever = EnsembleRetriever(
-    retrievers=[retriever1, retriever2],
-    weights=[0.3, 0.7]
-)
+retriever = EnsembleRetriever(retrievers=[retriever1, retriever2], weights=[0.3, 0.7])
 
 # if __name__ == "__main__":
 #     print(f"✓ Ingested {len(all_chunks)} chunks into Chroma.")

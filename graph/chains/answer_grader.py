@@ -1,8 +1,9 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain_core.runnables import RunnableSequence
-from pydantic import BaseModel, Field
 import os
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableSequence
+from langchain_groq import ChatGroq
+from pydantic import BaseModel, Field
 
 # from langchain_huggingface import HuggingFaceEndpoint
 

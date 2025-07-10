@@ -6,7 +6,8 @@ load_dotenv()
 
 
 from graph.chains.generation import generation_chain
-from graph.chains.hallucination_grader import GradeHallucinations, hallucination_grader
+from graph.chains.hallucination_grader import (GradeHallucinations,
+                                               hallucination_grader)
 from graph.chains.retrieval_grader import GradeDocuments, retrieval_grader
 from graph.chains.router import RouteQuery, question_router
 from ingestion import retriever
