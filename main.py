@@ -73,7 +73,8 @@ try:
     # --- Sidebar ---
     with st.sidebar:
         st.subheader("🧠 Choose Model")
-        model_options = [
+        # Define the models
+        default_model_options = [
             "llama-3.1-8b-instant",
             "llama-3.3-70b-versatile",
             "llama3-8b-8192",
@@ -81,11 +82,15 @@ try:
             "mistral-saba-24b",
             "meta-llama/llama-4-maverick-17b-128e-instruct",
         ]
-        # Shuffle the list
-        random.shuffle(model_options)
 
-        # Display selectbox with randomized order
-        selected_model = st.selectbox("Select a model", model_options)
+        # Shuffle only once per session
+        if "shuffled_models" not in st.session_state:
+            st.session_state.shuffled_models = default_model_options.copy()
+            random.shuffle(st.session_state.shuffled_models)
+
+        # Use the persistent shuffled list
+        selected_model = st.selectbox("Select a model", st.session_state.shuffled_models)
+
         st.success(f"✅ Model set to **{selected_model}**")
 
         st.divider()

@@ -177,18 +177,18 @@ retriever1 = Chroma(
     collection_name="rag-chroma",
     persist_directory="./.chroma",
     embedding_function=embeddings
-).as_retriever(search_kwargs={"k": 5})
+).as_retriever(search_kwargs={"k": 2})
 
 retriever2 = Chroma(
     collection_name="rag-chroma-extra",
     persist_directory="./.chroma-extra",
     embedding_function=embeddings
-).as_retriever(search_kwargs={"k": 5})
+).as_retriever(search_kwargs={"k": 2})
 
 # Combine both
 retriever = EnsembleRetriever(
     retrievers=[retriever1, retriever2],
-    weights=[0.4, 0.6]
+    weights=[0.3, 0.7]
 )
 
 # if __name__ == "__main__":

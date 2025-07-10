@@ -6,7 +6,6 @@ import os
 
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 
-
 class GradeDocuments(BaseModel):
     """Binary score for relevance check on retrieved documents."""
 
@@ -17,7 +16,6 @@ class GradeDocuments(BaseModel):
 
 def get_retrieval_grader(model_name: str) -> RunnableSequence:
     llm = ChatGroq(groq_api_key=GROQ_KEY, model_name=model_name)
-
     structured_llm_grader = llm.with_structured_output(GradeDocuments)
 
     system = """You are a grader assessing relevance of a retrieved document to a user question. \n 

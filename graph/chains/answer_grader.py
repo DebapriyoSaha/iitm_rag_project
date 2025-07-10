@@ -4,6 +4,16 @@ from langchain_core.runnables import RunnableSequence
 from pydantic import BaseModel, Field
 import os
 
+# from langchain_huggingface import HuggingFaceEndpoint
+
+# llm = HuggingFaceEndpoint(
+#     repo_id="HuggingFaceTB/SmolLM3-3B",
+#     max_new_tokens=512,
+#     temperature=0.0,
+#     huggingfacehub_api_token=os.getenv("HF_TOKEN"),
+# )
+
+
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 
 
