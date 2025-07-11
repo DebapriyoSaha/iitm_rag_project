@@ -112,11 +112,12 @@ try:
         st.divider()
         st.header("💡 Sample Questions")
         sample_questions = [
+            "What is the syllabus for DBMS course?",
             "What is the full form of MLT in BS Degree Course?",
             "How can I apply for the IITM BS Degree Program?",
+            "What are the courses offered in Diploma in Data Science?",
             "Is there a scholarship option available for the BS Degree Course?",
             "What are the eligibility criteria for the Data Science course?",
-            "Can I pursue this program along with a regular college degree?",
         ]
         for q in sample_questions:
             if st.button(q):
